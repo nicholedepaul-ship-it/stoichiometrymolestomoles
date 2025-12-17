@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stoichiometry Railroad Practice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        /* Railroad Specific Styling */
+        .railroad-container {
+            display: flex;
+            align-items: stretch;
+            border: 3px solid #374151; /* Thicker border */
+            border-radius: 8px;
+            background-color: white;
+            width: 100%; /* FORCE FULL WIDTH */
+            margin: 20px 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+        }
+
+        .rail-segment {
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            border-right: 3px solid #374151; /* Thicker border */
+            flex: 1; /* Grow to fill space */
+            min-width: 320px; /* Ensure enough space for 3 inputs */
+        }
+
+        /* The equals sign segment should not grow */
+        .rail-segment.narrow {
+            flex: 0 0 auto;
+            min-width: 60px;
+            border-right: none;
+        }
+
+        /* Remove border from last segment */
+        .rail-segment:last-child {
+            border-right: none;
+        }
+
+        .rail-top, .rail-bottom {
+            padding: 16px 8px;
+            flex: 1;
+            display: flex;
+            flex-direction: row; /* FORCE HORIZONTAL */
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap; /* Prevent wrapping */
+        }
+
+        .rail-top {
+            border-bottom: 3px solid #374151; /* Thicker border */
+            background-color: #fff;
+        }
+
+        .rail-bottom {
+            background-color: #f9fafb;
+        }
+
+        /* Input Styling */
+        input {
+            border: 2px solid #d1d5db;
+            border-radius: 6px;
+            padding: 8px 4px;
+            font-size: 1.1rem; /* Larger text */
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Specific Input Widths - slightly wider */
+        input.num-input { width: 90px; font-weight: 700; color: #111827; }
+        input.unit-input { width: 80px; color: #4b5563; }
+        input.chem-input { width: 110px; font-style: italic; color: #374151; font-weight: 500;}
+
+        /* Validation Colors */
+        input.correct {
+            border-color: #22c55e;
+            background-color: #f0fdf4;
+            color: #15803d;
+        }
+
+        input.incorrect {
+            border-color: #ef4444;
+            background-color: #fef2f2;
+        }
+
+        /* Hide empty bottom left cell visually */
+        .rail-bottom.empty {
+            background-color: #e5e7eb;
+            background-image: linear-gradient(45deg, #e5e7eb 25%, #d1d5db 25%, #d1d5db 50%, #e5e7eb 50%, #e5e7eb 75%, #d1d5db 75%, #d1d5db 100%);
+            background-size: 10px 10px;
+        }
+
+        .chem-formula {
+            font-family: 'Times New Roman', serif;
+        }
+        
+        .feedback-box {
+            transition: all 0.3s ease;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+        }
+        
+        .feedback-box.visible {
+            max-height: 200px;
+            opacity: 1;
+            margin-top: 1rem;
+        }
+
+        sub { font-size: 0.7em; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <!-- Container is very wide to allow the tracks to stretch -->
+    <div class="w-full max-w-[1800px] mx-auto">
+        <header class="mb-10 text-center max-w-4xl mx-auto">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Stoichiometry Railroad</h1>
+            <p class="text-gray-600">
+                Practice converting moles to moles. Fill in the numbers, units (e.g., "mol"), and chemical labels.<br>
+                <span class="font-semibold text-blue-600">Note: Round your final answers to the thousandths place (3 decimal places).</span>
+            </p>
+        </header>
+
+        <!-- Problem 1 -->
+        <div class="bg-white p-6 rounded-xl shadow-md mb-8 border border-gray-200" id="p1-container">
+            <div class="flex justify-between items-start mb-4">
+                <span class="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded">Problem 1</span>
+            </div>
+            
+            <div class="text-lg text-gray-800 mb-6">
+                <p class="mb-2">Consider the synthesis of water:</p>
+                <div class="text-xl font-bold text-center bg-gray-50 p-4 rounded-lg my-4 chem-formula">
+                    2 H<sub>2</sub> + 1 O<sub>2</sub> &rarr; 2 H<sub>2</sub>O
+                </div>
+                <p>How many moles of <strong>H<sub>2</sub>O</strong> are produced from <strong>5.42 moles of O<sub>2</sub></strong>?</p>
+            </div>
+
+            <!-- Railroad UI -->
+            <div class="railroad-container">
+                <!-- Segment 1: Given -->
+                <div class="rail-segment">
+                    <div class="rail-top">
+                        <input type="number" class="num-input" placeholder="#" id="p1-g-num">
+                        <input type="text" class="unit-input" placeholder="unit" id="p1-g-unit">
+                        <input type="text" class="chem-input" placeholder="label" id="p1-g-chem">
+                    </div>
+                    <div class="rail-bottom empty"></div>
+                </div>
+
+                <!-- Segment 2: Ratio -->
+                <div class="rail-segment">
+                    <div class="rail-top">
+                        <input type="number" class="num-input" placeholder="#" id="p1-r-top-num">
+                        <input type="text" class="unit-input" placeholder="unit" id="p1-r-top-unit">
+                        <input type="text" class="chem-input" placeholder="label" id="p1-r-top-chem">
+                    </div>
+                    <div class="rail-bottom">
+                        <input type="number" class="num-input" placeholder="#" id="p1-r-bot-num">
+                        <input type="text" class="unit-input" placeholder="unit" id="p1-r-bot-unit">
+                        <input type="text" class="chem-input" placeholder="label" id="p1-r-bot-chem">
+                    </div>
+                </div>
+
+                <!-- Segment 3: Answer Display -->
+                <div class="rail-segment narrow bg-blue-50">
+                    <div class="rail-top border-none flex justify-center items-center h-full bg-blue-50">
+                        <span class="text-gray-400 font-bold text-3xl">=</span>
+                    </div>
+                    <div class="rail-bottom bg-blue-50"></div>
+                </div>
+                
+                <!-- Final Answer Input -->
+                <div class="rail-segment border-none">
+                     <div class="rail-top border-none">
+                        <input type="number" class="num-input border-blue-300 bg-blue-50" placeholder="0.000" id="p1-ans-num" step="0.001">
+                        <input type="text" class="unit-input border-blue-300 bg-blue-50" placeholder="unit" id="p1-ans-unit">
+                        <input type="text" class="chem-input border-blue-300 bg-blue-50" placeholder="label" id="p1-ans-chem">
+                    </div>
+                    <div class="rail-bottom border-none bg-white"></div>
+                </div>
+            </div>
+
+            <div class="flex gap-4 items-center mt-6">
+                <button onclick="checkProblem(1)" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg">
+                    Check Answer
+                </button>
+                <div id="p1-feedback" class="feedback-box bg-red-100 text-red-700 px-4 py-2 rounded-lg text-sm"></div>
+            </div>
+        </div>
+
+        <!-- Problem 2 -->
+        <div class="bg-white p-6 rounded-xl shadow-md mb-8 border border-gray-200" id="p2-container">
+            <div class="flex justify-between items-start mb-4">
+                <span class="bg-purple-100 text-purple-800 text-sm font-medium px-2.5 py-0.5 rounded">Problem 2</span>
+            </div>
+            
+            <div class="text-lg text-gray-800 mb-6">
+                <p class="mb-2">Consider the production of ammonia:</p>
+                <div class="text-xl font-bold text-center bg-gray-50 p-4 rounded-lg my-4 chem-formula">
+                    1 N<sub>2</sub> + 3 H<sub>2</sub> &rarr; 2 NH<sub>3</sub>
+                </div>
+                <p>How many moles of <strong>H<sub>2</sub></strong> are needed to react completely with <strong>2.15 moles of N<sub>2</sub></strong>?</p>
+            </div>
+
+            <!-- Railroad UI -->
+            <div class="railroad-container">
+                <div class="rail-segment">
+                    <div class="rail-top">
+                        <input type="number" class="num-input" placeholder="#" id="p2-g-num">
+                        <input type="text" class="unit-input" placeholder="unit" id="p2-g-unit">
+                        <input type="text" class="chem-input" placeholder="label" id="p2-g-chem">
+                    </div>
+                    <div class="rail-bottom empty"></div>
+                </div>
+
+                <div class="rail-segment">
+                    <div class="rail-top">
+                        <input type="number" class="num-input" placeholder="#" id="p2-r-top-num">
+                        <input type="text" class="unit-input" placeholder="unit" id="p2-r-top-unit">
+                        <input type="text" class="chem-input" placeholder="label" id="p2-r-top-chem">
+                    </div>
+                    <div class="rail-bottom">
+                        <input type="number" class="num-input" placeholder="#" id="p2-r-bot-num">
+                        <input type="text" class="unit-input" placeholder="unit" id="p2-r-bot-unit">
+                        <input type="text" class="chem-input" placeholder="label" id="p2-r-bot-chem">
+                    </div>
+                </div>
+
+                 <div class="rail-segment narrow bg-blue-50">
+                    <div class="rail-top border-none flex justify-center items-center h-full bg-blue-50">
+                        <span class="text-gray-400 font-bold text-3xl">=</span>
+                    </div>
+                    <div class="rail-bottom bg-blue-50"></div>
+                </div>
+                
+                <div class="rail-segment border-none">
+                     <div class="rail-top border-none">
+                        <input type="number" class="num-input border-blue-300 bg-blue-50" placeholder="0.000" id="p2-ans-num" step="0.001">
+                        <input type="text" class="unit-input border-blue-300 bg-blue-50" placeholder="unit" id="p2-ans-unit">
+                        <input type="text" class="chem-input border-blue-300 bg-blue-50" placeholder="label" id="p2-ans-chem">
+                    </div>
+                    <div class="rail-bottom border-none bg-white"></div>
+                </div>
+            </div>
+
+            <div class="flex gap-4 items-center mt-6">
+                <button onclick="checkProblem(2)" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg">
+                    Check Answer
+                </button>
+                <div id="p2-feedback" class="feedback-box bg-red-100 text-red-700 px-4 py-2 rounded-lg text-sm"></div>
+            </div>
+        </div>
+
+        <!-- Problem 3 -->
+        <div class="bg-white p-6 rounded-xl shadow-md mb-8 border border-gray-200" id="p3-container">
+            <div class="flex justify-between items-start mb-4">
+                <span class="bg-green-100 text-green-800 text-sm font-medium px-2.5 py-0.5 rounded">Problem 3</span>
+            </div>
+            
+            <div class="text-lg text-gray-800 mb-6">
+                <p class="mb-2">Consider the rusting of iron:</p>
+                <div class="text-xl font-bold text-center bg-gray-50 p-4 rounded-lg my-4 chem-formula">
+                    4 Fe + 3 O<sub>2</sub> &rarr; 2 Fe<sub>2</sub>O<sub>3</sub>
+                </div>
+                <p>If <strong>4.33 moles of Fe</strong> react, how many moles of <strong>Fe<sub>2</sub>O<sub>3</sub></strong> are produced?</p>
+            </div>
+
+            <!-- Railroad UI -->
+            <div class="railroad-container">
+                <div class="rail-segment">
+                    <div class="rail-top">
+                        <input type="number" class="num-input" placeholder="#" id="p3-g-num">
+                        <input type="text" class="unit-input" placeholder="unit" id="p3-g-unit">
+                        <input type="text" class="chem-input" placeholder="label" id="p3-g-chem">
+                    </div>
+                    <div class="rail-bottom empty"></div>
+                </div>
+
+                <div class="rail-segment">
+                    <div class="rail-top">
+                        <input type="number" class="num-input" placeholder="#" id="p3-r-top-num">
+                        <input type="text" class="unit-input" placeholder="unit" id="p3-r-top-unit">
+                        <input type="text" class="chem-input" placeholder="label" id="p3-r-top-chem">
+                    </div>
+                    <div class="rail-bottom">
+                        <input type="number" class="num-input" placeholder="#" id="p3-r-bot-num">
+                        <input type="text" class="unit-input" placeholder="unit" id="p3-r-bot-unit">
+                        <input type="text" class="chem-input" placeholder="label" id="p3-r-bot-chem">
+                    </div>
+                </div>
+
+                 <div class="rail-segment narrow bg-blue-50">
+                    <div class="rail-top border-none flex justify-center items-center h-full bg-blue-50">
+                        <span class="text-gray-400 font-bold text-3xl">=</span>
+                    </div>
+                    <div class="rail-bottom bg-blue-50"></div>
+                </div>
+                
+                <div class="rail-segment border-none">
+                     <div class="rail-top border-none">
+                        <input type="number" class="num-input border-blue-300 bg-blue-50" placeholder="0.000" id="p3-ans-num" step="0.001">
+                        <input type="text" class="unit-input border-blue-300 bg-blue-50" placeholder="unit" id="p3-ans-unit">
+                        <input type="text" class="chem-input border-blue-300 bg-blue-50" placeholder="label" id="p3-ans-chem">
+                    </div>
+                    <div class="rail-bottom border-none bg-white"></div>
+                </div>
+            </div>
+
+            <div class="flex gap-4 items-center mt-6">
+                <button onclick="checkProblem(3)" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg">
+                    Check Answer
+                </button>
+                <div id="p3-feedback" class="feedback-box bg-red-100 text-red-700 px-4 py-2 rounded-lg text-sm"></div>
+            </div>
+        </div>
+        
+    </div>
+
+    <script>
+        const key = {
+            1: {
+                given: { num: 5.42, unit: "mol", chem: ["O2", "o2"] },
+                ratioTop: { num: 2, unit: "mol", chem: ["H2O", "h2o"] },
+                ratioBot: { num: 1, unit: "mol", chem: ["O2", "o2"] },
+                answer: { num: 10.84, unit: "mol", chem: ["H2O", "h2o"] }
+            },
+            2: {
+                given: { num: 2.15, unit: "mol", chem: ["N2", "n2"] },
+                ratioTop: { num: 3, unit: "mol", chem: ["H2", "h2"] },
+                ratioBot: { num: 1, unit: "mol", chem: ["N2", "n2"] },
+                answer: { num: 6.45, unit: "mol", chem: ["H2", "h2"] }
+            },
+            3: {
+                given: { num: 4.33, unit: "mol", chem: ["Fe", "fe"] },
+                ratioTop: { num: 2, unit: "mol", chem: ["Fe2O3", "fe2o3"] },
+                ratioBot: { num: 4, unit: "mol", chem: ["Fe", "fe"] },
+                answer: { num: 2.165, unit: "mol", chem: ["Fe2O3", "fe2o3"] }
+            }
+        };
+
+        // Initialize Auto-Subscripting for all chem-input fields
+        document.addEventListener('DOMContentLoaded', () => {
+            const chemInputs = document.querySelectorAll('.chem-input');
+            const normalToSub = { '0':'₀', '1':'₁', '2':'₂', '3':'₃', '4':'₄', '5':'₅', '6':'₆', '7':'₇', '8':'₈', '9':'₉' };
+            
+            chemInputs.forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const el = e.target;
+                    let val = el.value;
+                    let newVal = '';
+                    let hasChange = false;
+
+                    // Preserve cursor position roughly (simple version)
+                    const cursor = el.selectionStart;
+                    
+                    for (let char of val) {
+                        if (normalToSub[char]) {
+                            newVal += normalToSub[char];
+                            hasChange = true;
+                        } else {
+                            newVal += char;
+                        }
+                    }
+
+                    if (hasChange) {
+                        el.value = newVal;
+                        el.setSelectionRange(cursor, cursor);
+                    }
+                });
+            });
+        });
+
+        function normalize(str) {
+            if (!str) return "";
+            
+            // Map subscripts back to normal numbers for validation
+            const subToNormal = { '₀':'0', '₁':'1', '₂':'2', '₃':'3', '₄':'4', '₅':'5', '₆':'6', '₇':'7', '₈':'8', '₉':'9' };
+            
+            let cleanStr = str.split('').map(char => subToNormal[char] || char).join('');
+            
+            return cleanStr.trim().toLowerCase().replace(/\s+/g, '');
+        }
+
+        function isUnitCorrect(val) {
+            const v = normalize(val);
+            return v === "mol" || v === "moles" || v === "mole";
+        }
+
+        function isChemCorrect(val, validList) {
+            const v = normalize(val);
+            return validList.includes(v);
+        }
+
+        function isNumCorrect(val, expected) {
+            const v = parseFloat(val);
+            if (isNaN(v)) return false;
+            // Allow small float tolerance
+            return Math.abs(v - expected) < 0.001;
+        }
+
+        function setValidationState(elementId, isValid) {
+            const el = document.getElementById(elementId);
+            if (isValid) {
+                el.classList.remove('incorrect');
+                el.classList.add('correct');
+            } else {
+                el.classList.remove('correct');
+                el.classList.add('incorrect');
+            }
+        }
+
+        function checkProblem(pId) {
+            const data = key[pId];
+            let allCorrect = true;
+            let errors = [];
+
+            // Helper to validate a group of 3 inputs
+            function validateSegment(prefix, expectedData) {
+                // 1. Check Number
+                const numId = `${prefix}-num`;
+                const numVal = document.getElementById(numId).value;
+                const numOk = isNumCorrect(numVal, expectedData.num);
+                setValidationState(numId, numOk);
+                if (!numOk) errors.push("numbers");
+
+                // 2. Check Unit
+                const unitId = `${prefix}-unit`;
+                const unitVal = document.getElementById(unitId).value;
+                const unitOk = isUnitCorrect(unitVal);
+                setValidationState(unitId, unitOk);
+                if (!unitOk) errors.push("units");
+
+                // 3. Check Chem
+                const chemId = `${prefix}-chem`;
+                const chemVal = document.getElementById(chemId).value;
+                const chemOk = isChemCorrect(chemVal, expectedData.chem);
+                setValidationState(chemId, chemOk);
+                if (!chemOk) errors.push("labels");
+
+                return numOk && unitOk && chemOk;
+            }
+
+            // Validate all segments
+            const gOk = validateSegment(`p${pId}-g`, data.given);
+            const rtOk = validateSegment(`p${pId}-r-top`, data.ratioTop);
+            const rbOk = validateSegment(`p${pId}-r-bot`, data.ratioBot);
+            const ansOk = validateSegment(`p${pId}-ans`, data.answer);
+
+            allCorrect = gOk && rtOk && rbOk && ansOk;
+
+            // Feedback Logic
+            const feedbackBox = document.getElementById(`p${pId}-feedback`);
+            if (allCorrect) {
+                feedbackBox.innerText = "Excellent work! All fields are correct.";
+                feedbackBox.className = "feedback-box visible bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm border border-green-200";
+                
+                // Button Success State
+                const btn = document.querySelector(`#p${pId}-container button`);
+                btn.innerText = "Correct!";
+                btn.className = "bg-green-500 text-white font-bold py-2 px-6 rounded-lg shadow-lg cursor-default";
+            } else {
+                feedbackBox.innerText = "Some fields are incorrect (marked in red). Please fix them and try again.";
+                feedbackBox.className = "feedback-box visible bg-red-100 text-red-700 px-4 py-2 rounded-lg text-sm border border-red-200";
+            }
+        }
+    </script>
+</body>
+</html>
